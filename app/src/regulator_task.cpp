@@ -7,7 +7,7 @@ extern struct k_msgq temp_queue; // Message queue from sensor task
 
 static int32_t s_min_threshold {65};
 static int32_t s_max_threshold {75};
-static k_mutex s_threshold_mutex;
+static k_mutex s_threshold_mutex {};
 
 // Thread-safe API to update the regulator thresholds at runtime
 void regulator_set_thresholds(int32_t min, int32_t max)
@@ -19,25 +19,17 @@ void regulator_set_thresholds(int32_t min, int32_t max)
 }
 
 static FanState s_current_fan_state {FAN_OFF};
-static k_mutex s_fan_state_mutex;
-
-// Thread-safe API to update the fan state at runtime
-void regulator_set_fan_state(FanState state)
-{
-    k_mutex_lock(&s_fan_state_mutex, K_FOREVER);
-    s_current_fan_state = state;
-    k_mutex_unlock(&s_fan_state_mutex);
-}
 
 void regulator_task(void*, void*, void*)
 {
+    k_mutex_init(&s_threshold_mutex);
+    
     printk("[REGULATOR] Task started\n");
 
     SensorMessage msgFromSensor {};
     RegulatorMessage msgToActuator {};
     int32_t min_threshold {};
     int32_t max_threshold {};
-    FanState current_fan_state {};
 
     while (true)
     {
@@ -49,20 +41,15 @@ void regulator_task(void*, void*, void*)
             max_threshold = s_max_threshold;
             k_mutex_unlock(&s_threshold_mutex);
 
-            // Read fan state under mutex to prevent partial reads
-            k_mutex_lock(&s_fan_state_mutex, K_FOREVER);
-            current_fan_state = s_current_fan_state;
-            k_mutex_unlock(&s_fan_state_mutex);
-
             // Hysteresis control logic
-            if (msgFromSensor.value >= max_threshold && current_fan_state == FAN_OFF)
+            if (msgFromSensor.value >= max_threshold && s_current_fan_state == FAN_OFF)
             {
-                regulator_set_fan_state(FAN_ON); // Update shared state
+                s_current_fan_state = FAN_ON;
                 msgToActuator.fan_command = FAN_ON;
             }
-            else if (msgFromSensor.value <= min_threshold && current_fan_state == FAN_ON)
+            else if (msgFromSensor.value <= min_threshold && s_current_fan_state == FAN_ON)
             {
-                regulator_set_fan_state(FAN_OFF); // Update shared state
+                s_current_fan_state = FAN_OFF;
                 msgToActuator.fan_command = FAN_OFF;
             }
             else

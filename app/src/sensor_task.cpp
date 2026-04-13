@@ -51,6 +51,7 @@ void sensor_task(void*, void*, void*)
             printk("[SENSOR] Warning: queue full, message dropped\n");
         }
     }
+    k_timer_stop(&sensor_timer);
 }
 
 // Static thread declaration — stack and TCB allocated at compile time

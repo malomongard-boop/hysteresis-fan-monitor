@@ -19,7 +19,7 @@ struct RegulatorMessage
     int64_t timestamp {}; // command timestamp (ms)
 };
 
-// Stak sizes
+// Stack sizes
 constexpr int SENSOR_STACK_SIZE {2048};
 constexpr int REGULATOR_STACK_SIZE {2048};
 constexpr int ACTUATOR_STACK_SIZE {2048};

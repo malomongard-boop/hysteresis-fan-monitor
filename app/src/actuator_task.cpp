@@ -2,7 +2,6 @@
 #include "tasks.hpp"
 
 extern struct k_msgq cmd_queue; // Message queue from regulator task
-extern void regulator_set_fan_state(FanState state);
 static int onOff_counter {0};
 
 void actuator_task(void*, void*, void*)
@@ -17,18 +16,18 @@ void actuator_task(void*, void*, void*)
         {
             if (msgFromRegulator.fan_command == FAN_ON)
             {
+                onOff_counter++;
                 printk("[ACTUATOR] Received command to turn FAN ON at %lldms\n", msgFromRegulator.timestamp);
             }
             else
             {
-                onOff_counter++;
                 printk("[ACTUATOR] Received command to turn FAN OFF at %lldms\n", msgFromRegulator.timestamp);
             }
-        }
 
-        if (onOff_counter % 10 == 0 && msgFromRegulator.fan_command == FAN_ON) // Print status every 10 commands
-        {
-            printk("[ACTUATOR] Fan ON/OFF counter: %d\n", onOff_counter);
+            if (onOff_counter % 10 == 0 && msgFromRegulator.fan_command == FAN_ON) // Print status every 10 commands
+            {
+                printk("[ACTUATOR] Fan ON/OFF counter: %d\n", onOff_counter);
+            }
         }
     }
 }
