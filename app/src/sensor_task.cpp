@@ -6,7 +6,6 @@ K_SEM_DEFINE(sensor_sem, 0, 1); // Semaphore signaled by the timer ISR to trigge
 
 // Temperature fluctuations simulation
 static int32_t s_temperature {20};
-static int32_t s_cycle {0};
 
 // Timer callback — runs in ISR context
 // Only signals the semaphore; actual work is done in the task
@@ -25,20 +24,17 @@ void sensor_task(void*, void*, void*)
                   K_MSEC(ACQUISITION_PERIOD_MS),
                   K_MSEC(ACQUISITION_PERIOD_MS));
 
-    while (s_cycle < 20)
+    while (true)
     {
         k_sem_take(&sensor_sem, K_FOREVER);
         SensorMessage msg {};
         msg.value = s_temperature;
         msg.timestamp = k_uptime_get();
 
-        //printk("[SENSOR] Acquired value=%d at %lldms\n", msg.value, msg.timestamp);
-
         // Simulate temperature changes with a simple pattern: increase until 90, then reset to 20
         if (s_temperature >= 90)
         {
-            s_temperature = 20; // reset to minimum
-            s_cycle++;
+            s_temperature = 20; // reset to minimum        
         }
         else
         {
