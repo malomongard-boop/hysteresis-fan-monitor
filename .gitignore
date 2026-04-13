@@ -1,0 +1,19 @@
+build/
+
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+.config
+autoconf.h
+
+.vscode/
+.idea/
+*.code-workspace
+
+__pycache__/
+*.pyc
+*.pyo
+
+.DS_Store        # macOS
+Thumbs.db        # Windows
